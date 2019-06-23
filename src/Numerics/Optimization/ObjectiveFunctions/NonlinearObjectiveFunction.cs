@@ -13,6 +13,20 @@ namespace MathNet.Numerics.Optimization.ObjectiveFunctions
             int accuracyOrder = 2)
             : base(function, derivative, accuracyOrder)
         {}
+
+        public override void SetObserved(Vector<double> observedX, Vector<double> observedY, Vector<double> weights = null)
+        {
+            if (observedX == null || observedY == null)
+            {
+                throw new ArgumentNullException("The data set can't be null.");
+            }
+            if (observedX.Count != observedY.Count)
+            {
+                throw new ArgumentException("The observed x data can't have different count from observed y data.");
+            }
+
+            base.SetObserved(observedX, ObservedY, weights);
+        }
     }
 
     internal class MultivariateNonlinearObjectiveFunction : NonlinearObjectiveFunction<Vector<double>[]>
@@ -23,6 +37,23 @@ namespace MathNet.Numerics.Optimization.ObjectiveFunctions
             int accuracyOrder = 2)
             : base(function, derivative, accuracyOrder)
         {}
+
+        public override void SetObserved(Vector<double>[] observedX, Vector<double> observedY, Vector<double> weights = null)
+        {
+            if (observedX == null || observedY == null)
+            {
+                throw new ArgumentNullException("The data set can't be null.");
+            }
+            foreach(var x in observedX)
+            {
+                if (x.Count != observedY.Count)
+                {
+                    throw new ArgumentException("The observed x data can't have different count from observed y data.");
+                }
+            }
+
+            base.SetObserved(observedX, ObservedY, weights);
+        }
     }
 
     internal class NonlinearObjectiveFunction<T> : IObjectiveModel
@@ -206,16 +237,13 @@ namespace MathNet.Numerics.Optimization.ObjectiveFunctions
         /// <summary>
         /// Set observed data to fit.
         /// </summary>
-        public void SetObserved(T observedX, Vector<double> observedY, Vector<double> weights = null)
+        public virtual void SetObserved(T observedX, Vector<double> observedY, Vector<double> weights = null)
         {
             if (observedX == null || observedY == null)
             {
                 throw new ArgumentNullException("The data set can't be null.");
             }
-            //if (observedX.Count != observedY.Count)
-            //{
-            //    throw new ArgumentException("The observed x data can't have different from observed y data.");
-            //}
+
             ObservedX = observedX;
             ObservedY = observedY;
 
