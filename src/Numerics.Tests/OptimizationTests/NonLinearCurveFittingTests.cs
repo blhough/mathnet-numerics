@@ -618,5 +618,59 @@ namespace MathNet.Numerics.UnitTests.OptimizationTests
         }
 
         #endregion Thurber
+
+        #region Circle 2D
+
+        // model: Rosenbrock
+        //       f(x, y; a, b, r) = (x - a)^2 + (y - b)^2 - r^2
+        // derivatives:
+        //       df/da = 400*a^3 - 400*a*b + 2*a - 2
+        //       df/db = 200*(b - a^2)
+        // best fitted parameters:
+        //       a = 1
+        //       b = 1
+        private Vector<double> Circle2DModel(Vector<double> p, Vector<double>[] inputs)
+        {
+            var a = p[0];
+            var b = p[1];
+            var r = p[2];
+
+            var x = inputs[0];
+            var y = inputs[1];
+
+            var dx = (x - a).PointwisePower(2);
+            var dy = (y - b).PointwisePower(2);
+            return (dx + dy).PointwiseSqrt() - r; 
+        }
+        //private Matrix<double> RosenbrockPrime(Vector<double> p, Vector<double> x)
+        //{
+        //    var prime = Matrix<double>.Build.Dense(x.Count, p.Count);
+        //    for (int i = 0; i < x.Count; i++)
+        //    {
+        //        prime[i, 0] = 400.0 * p[0] * p[0] * p[0] - 400.0 * p[0] * p[1] + 2.0 * p[0] - 2.0;
+        //        prime[i, 1] = 200.0 * (p[1] - p[0] * p[0]);
+        //    }
+        //    return prime;
+        //}
+        private Vector<double> Circle2DX = new DenseVector(new double[] { 1.0, 0.0, -1.0, 0.0 });
+        private Vector<double> Circle2DY = new DenseVector(new double[] { 0.0, 1.0, 0.0, -1.0 });
+        private Vector<double> Circle2DPbest = new DenseVector(new double[] { 0.0, 0.0, 1.0 });
+
+
+        [Test]
+        public void Cicrle2D_LM_Der()
+        {
+            // unconstrained
+            var obj = ObjectiveFunction.MultivariateNonlinearModel(Circle2DModel, new[] { Circle2DX, Circle2DY }, new DenseVector(4));
+            var solver = new LevenbergMarquardtMinimizer(maximumIterations: 10000);
+            var result = solver.FindMinimum(obj, new DenseVector(new [] { 0.1, 0.1, 2.0 }));
+
+            for (int i = 0; i < result.MinimizingPoint.Count; i++)
+            {
+                AssertHelpers.AlmostEqualRelative(Circle2DPbest[i], result.MinimizingPoint[i], 2);
+            }
+        }
+
+        #endregion
     }
 }
